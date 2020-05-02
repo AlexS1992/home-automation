@@ -1,0 +1,25 @@
+FROM centos:8
+
+ENV SPOTIFYD_VERSION 0.2.20
+
+RUN set -ex \
+	&& yum update -y \
+	&& yum install -y cargo wget alsa-lib-devel openssl-devel \
+	&& curl -f -L https://static.rust-lang.org/rustup.sh -O \
+	&& sh rustup.sh -y \
+	&& wget -O spotifyd.tar.gz https://github.com/Spotifyd/spotifyd/archive/v0.2.20.tar.gz \
+	&& mkdir -p /var/spotifyd-src \
+	&& tar -xf spotifyd.tar.gz --strip-components=1 -C /var/spotifyd-src \
+	&& rm spotifyd.tar.gz \
+	\
+	&& cd /var/spotifyd-src \
+	&& cargo build --release \
+	&& mkdir /var/spotifyd \
+	&& cargo install --path /var/spotifyd \
+	&& rm -rf /var/spotifyd-src
+
+COPY spotifyd.config /etc/spotifyd/spotifyd.config
+
+RUN set -ex \
+	&& cp /var/spotifyd/contrib/spotifyd.service /etc/systemd/ \
+	&& systemctl --user start spotifyd.service

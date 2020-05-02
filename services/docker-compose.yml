@@ -1,0 +1,60 @@
+version: '3.7'
+services:
+  soundshare:
+    build:
+      context: ../soundshare
+      dockerfile: Dockerfile
+    image: soundshare:latest
+    volumes:
+      - soundshare:/tmp/soundshare
+
+  avahi:
+    image: avahi:latest
+    ports:
+      - 5353:5353/udp
+  
+  snapserver:
+    depends_on:
+      - avahi
+      - soundshare
+    image: snapserver:latest
+    volumes:
+      - soundshare:/tmp/soundshare
+    ports:
+      - 1704:1704
+      - 1705:1705
+      - 1780:1780
+
+  homeassistant:
+    image: homeassistant/home-assistant:stable
+    volumes:
+      - ../homeassistant:/config
+    ports:
+      - 8123:8123
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ../mosquitto:/mosquitto
+    ports:
+      - 1883:1883
+      - 9001:9001
+  
+  spotifyd:
+    depends_on:
+      - snapserver
+    build:
+      context: ../spotifyd
+      dockerfile: Dockerfile
+    image: spotifyd:alex
+    secrets: 
+      - spotify_pwd_alex
+    volumes:
+      - soundshare:/tmp/soundshare
+
+secrets:
+  spotify_pwd_alex:
+    file: spotify_pwd_alex.txt
+
+volumes:
+  soundshare:
