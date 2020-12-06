@@ -34,14 +34,14 @@ services:
   homeassistant:
     image: homeassistant/home-assistant:stable
     volumes:
-      - /home/ray/Programs/homeassistant:/config
+      - /opt/homeassistant:/config
     ports:
       - 8123:8123
 
   mosquitto:
     image: eclipse-mosquitto:latest
     volumes:
-      - /home/ray/Programs/mosquitto:/mosquitto
+      - /opt/mosquitto:/mosquitto
     ports:
       - 1883:1883
       - 9001:9001
