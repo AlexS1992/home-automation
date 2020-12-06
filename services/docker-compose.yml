@@ -9,6 +9,9 @@ services:
       - soundshare:/tmp/soundshare
 
   avahi:
+    build:
+      context: ../avahi
+      dockerfile: Dockerfile
     image: avahi:latest
     ports:
       - 5353:5353/udp
@@ -17,6 +20,9 @@ services:
     depends_on:
       - avahi
       - soundshare
+    build:
+      context: ../snapserver
+      dockerfile: Dockerfile
     image: snapserver:latest
     volumes:
       - soundshare:/tmp/soundshare
@@ -28,14 +34,14 @@ services:
   homeassistant:
     image: homeassistant/home-assistant:stable
     volumes:
-      - ../homeassistant:/config
+      - /home/ray/Programs/homeassistant:/config
     ports:
       - 8123:8123
 
   mosquitto:
     image: eclipse-mosquitto:latest
     volumes:
-      - ../mosquitto:/mosquitto
+      - /home/ray/Programs/mosquitto:/mosquitto
     ports:
       - 1883:1883
       - 9001:9001
@@ -52,9 +58,26 @@ services:
     volumes:
       - soundshare:/tmp/soundshare
 
+  deconz:
+    image: marthoc/deconz:latest
+    devices: 
+      - /dev/ttyACM0:/dev/ttyACM0
+    environment:
+      - DECONZ_WEB_PORT=8080
+      - DECONZ_WS_PORT=8443
+      - DECONZ_DEVICE=/dev/ttyACM0
+    ports:
+      - 8080:8080
+      - 8443:8443
+    volumes:
+      - /opt/deconz:/root/.local/share/dresden-elektronik/deCONZ
+      - /etc/localtime:/etc/localtime:ro
+
 secrets:
   spotify_pwd_alex:
     file: spotify_pwd_alex.txt
+  deconz_pwd:
+    file: deconz_vnc_pwd.txt
 
 volumes:
   soundshare:
